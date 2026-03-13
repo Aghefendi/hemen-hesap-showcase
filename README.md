@@ -37,7 +37,7 @@ Taksi ücretleri ve finansal araçlar için binlerce dinamik sayfayı **Next.js 
 - **Frontend:** React 19, Next.js 16, Tailwind CSS, Recharts, React-Leaflet
 - **Backend/DB:** Supabase (PostgreSQL), Upstash Redis, Next-Auth
 - **Data & AI:** Python (Scrapers), OpenAI API (Embeddings), Llama-3 (Local Content Gen)
-- **DevOps:** GitHub Actions, Vercel, Docker
+- **DevOps:** GitHub Actions, Aws, Docker
 
 ---
 
