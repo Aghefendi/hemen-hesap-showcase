@@ -1,0 +1,288 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  HemenHesap - Next.js SSR on AWS Amplify (Low-Cost Deployment)
+  Supabase & Upstash remain external (free tier).
+  Estimated cost: ~$3-8/month.
+
+# ============================================
+# PARAMETERS
+# ============================================
+Parameters:
+  GitHubRepoUrl:
+    Type: String
+    Description: Full GitHub repository URL (HTTPS)
+    Default: https://github.com/your-username/your-repo
+
+  GitHubAccessToken:
+    Type: String
+    NoEcho: true
+    Description: GitHub Personal Access Token (repo scope)
+
+  DomainName:
+    Type: String
+    Default: example.com
+    Description: Root domain name (without www)
+
+  BillingAlertEmail:
+    Type: String
+    Default: admin@example.com
+    Description: Email for billing alerts
+
+  BillingThreshold:
+    Type: Number
+    Default: 10
+    Description: Monthly cost threshold in USD for billing alarm
+
+  # --- Application Environment Variables ---
+  NextAuthSecret:
+    Type: String
+    NoEcho: true
+    Description: NextAuth.js secret key
+
+  GoogleClientId:
+    Type: String
+    NoEcho: true
+    Description: Google OAuth Client ID
+
+  GoogleClientSecret:
+    Type: String
+    NoEcho: true
+    Description: Google OAuth Client Secret
+
+  AdminEmail:
+    Type: String
+    Default: destek.hemenhesap@gmail.com
+    Description: Admin email whitelist (comma-separated)
+
+  GithubToken:
+    Type: String
+    NoEcho: true
+    Description: GitHub token for file management from admin panel
+
+  GithubRepo:
+    Type: String
+    Default: your-username/your-repo
+    Description: GitHub repo in owner/repo format
+
+  SupabaseUrl:
+    Type: String
+    Description: Supabase project URL
+
+  SupabaseAnonKey:
+    Type: String
+    NoEcho: true
+    Description: Supabase anon key (public)
+
+  SupabaseServiceKey:
+    Type: String
+    NoEcho: true
+    Description: Supabase service role key (secret)
+
+  RevalidateSecret:
+    Type: String
+    NoEcho: true
+    Description: ISR revalidation webhook secret
+
+  AdsenseId:
+    Type: String
+    Default: ''
+    Description: Google AdSense publisher ID
+
+  GtmId:
+    Type: String
+    Default: ''
+    Description: Google Tag Manager container ID
+
+  UpstashRedisUrl:
+    Type: String
+    Description: Upstash Redis REST URL
+
+  UpstashRedisToken:
+    Type: String
+    NoEcho: true
+    Description: Upstash Redis REST token
+
+  DigitalOceanApiKey:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: DigitalOcean GenAI API key (optional)
+
+  DigitalOceanAgentEndpoint:
+    Type: String
+    Default: ''
+    Description: DigitalOcean GenAI agent endpoint (optional)
+
+  TelegramBotToken:
+    Type: String
+    NoEcho: true
+    Default: ''
+    Description: Telegram bot token for notifications
+
+  TelegramChatId:
+    Type: String
+    Default: ''
+    Description: Telegram chat ID for notifications
+
+# ============================================
+# RESOURCES
+# ============================================
+Resources:
+
+  # -----------------------------------------
+  # NOT: Billing Alarm us-east-1'de ayrı kurulmalı
+  # Aşağıdaki komutu çalıştırın:
+  # aws cloudformation create-stack --stack-name hemenhesap-billing --template-body file://infra/billing-alarm.yaml --region us-east-1
+  # -----------------------------------------
+
+  # -----------------------------------------
+  # IAM Role — Amplify Service Role
+  # -----------------------------------------
+  AmplifyServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: hemenhesap-amplify-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: amplify.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess-Amplify
+
+  # -----------------------------------------
+  # Amplify App — Next.js SSR Hosting
+  # -----------------------------------------
+  AmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: hemenhesap
+      Description: HemenHesap - Türkiye'nin Hesap Makinesi
+      Repository: !Ref GitHubRepoUrl
+      AccessToken: !Ref GitHubAccessToken
+      IAMServiceRole: !GetAtt AmplifyServiceRole.Arn
+      Platform: WEB_COMPUTE  # SSR desteği için zorunlu
+      BuildSpec: |
+        version: 1
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                - corepack enable
+                - corepack prepare pnpm@latest --activate
+                - pnpm install --frozen-lockfile
+                - pnpm run build:core
+            build:
+              commands:
+                - pnpm run build
+          artifacts:
+            baseDirectory: .next
+            files:
+              - '**/*'
+          cache:
+            paths:
+              - node_modules/**/*
+              - .next/cache/**/*
+      EnvironmentVariables:
+        - Name: NODE_ENV
+          Value: production
+        - Name: NEXT_PUBLIC_SITE_URL
+          Value: !Sub 'https://www.${DomainName}'
+        - Name: NEXTAUTH_SECRET
+          Value: !Ref NextAuthSecret
+        - Name: NEXTAUTH_URL
+          Value: !Sub 'https://www.${DomainName}'
+        - Name: GOOGLE_CLIENT_ID
+          Value: !Ref GoogleClientId
+        - Name: GOOGLE_CLIENT_SECRET
+          Value: !Ref GoogleClientSecret
+        - Name: ADMIN_EMAIL
+          Value: !Ref AdminEmail
+        - Name: GITHUB_TOKEN
+          Value: !Ref GithubToken
+        - Name: GITHUB_REPO
+          Value: !Ref GithubRepo
+        - Name: NEXT_PUBLIC_SUPABASE_URL
+          Value: !Ref SupabaseUrl
+        - Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+          Value: !Ref SupabaseAnonKey
+        - Name: SUPABASE_SERVICE_KEY
+          Value: !Ref SupabaseServiceKey
+        - Name: REVALIDATE_SECRET
+          Value: !Ref RevalidateSecret
+        - Name: NEXT_PUBLIC_ADSENSE_ID
+          Value: !Ref AdsenseId
+        - Name: NEXT_PUBLIC_GTM_ID
+          Value: !Ref GtmId
+        - Name: UPSTASH_REDIS_REST_URL
+          Value: !Ref UpstashRedisUrl
+        - Name: UPSTASH_REDIS_REST_TOKEN
+          Value: !Ref UpstashRedisToken
+        - Name: DIGITALOCEAN_API_KEY
+          Value: !Ref DigitalOceanApiKey
+        - Name: DIGITALOCEAN_AGENT_ENDPOINT
+          Value: !Ref DigitalOceanAgentEndpoint
+        - Name: TELEGRAM_BOT_TOKEN
+          Value: !Ref TelegramBotToken
+        - Name: TELEGRAM_CHAT_ID
+          Value: !Ref TelegramChatId
+        - Name: _CUSTOM_IMAGE
+          Value: amplify:al2023
+      CustomRules:
+        # SPA fallback for dynamic routes
+        - Source: /<*>
+          Target: /index.html
+          Status: '404-200'
+
+  # -----------------------------------------
+  # Amplify Branch — Production (main)
+  # -----------------------------------------
+  AmplifyBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      BranchName: main
+      EnableAutoBuild: true
+      EnablePullRequestPreview: false
+      Stage: PRODUCTION
+      Framework: 'Next.js - SSR'
+
+  # -----------------------------------------
+  # Amplify Domain — Custom Domain + SSL
+  # -----------------------------------------
+  AmplifyDomain:
+    Type: AWS::Amplify::Domain
+    DependsOn: AmplifyBranch
+    Properties:
+      AppId: !GetAtt AmplifyApp.AppId
+      DomainName: !Ref DomainName
+      SubDomainSettings:
+        - BranchName: main
+          Prefix: www
+        - BranchName: main
+          Prefix: ''
+      EnableAutoSubDomain: false
+
+# ============================================
+# OUTPUTS
+# ============================================
+Outputs:
+  AmplifyAppId:
+    Description: Amplify Application ID
+    Value: !GetAtt AmplifyApp.AppId
+    Export:
+      Name: HemenHesap-AmplifyAppId
+
+  AmplifyDefaultDomain:
+    Description: Default Amplify URL (for testing before DNS switch)
+    Value: !Sub 'https://main.${AmplifyApp.DefaultDomain}'
+
+  ProductionUrl:
+    Description: Production URL
+    Value: !Sub 'https://www.${DomainName}'
+
+  AmplifyBranchUrl:
+    Description: Branch-specific URL
+    Value: !Sub 'https://main.${AmplifyApp.DefaultDomain}'

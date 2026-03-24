@@ -1,6 +1,6 @@
 # HemenHesap.com | Teknik Mimari ve Showcase 🚀
 
-**HemenHesap.com**, Next.js 16 (App Router), TypeScript ve Supabase ekosistemi üzerine kurulu; hız, SEO ve ölçeklenebilirliği merkeze alan modern bir web platformudur.
+**HemenHesap.com**, Next.js 16 (App Router), React 19, TypeScript ve Supabase ekosistemi üzerine kurulu; hız, SEO ve ölçeklenebilirliği merkeze alan **Modüler Monolith (FSD)** mimarili modern bir web platformudur.
 
 > **Not:** Bu depo, projenin sadece mimari yapısını ve dökümantasyonunu sergilemek için oluşturulmuştur. Ana kod tabanı gizlidir.
 
@@ -8,8 +8,10 @@
 
 ## 🛠️ Mimari Öne Çıkanlar
 
-### 1. Mikro-Modüler Plugin Yapısı (Build Engine)
-Platform, 110+ hesaplama aracını yöneten özel bir **"Discovery Pattern"** mimarisiyle çalışır. `scripts/generate-calculators.ts` motoru sayesinde yeni bir araç eklemek, sadece bir konfigürasyon dosyası eklemek kadar basittir. Sistem; navigasyonu, arama indeksini ve veritabanı şemalarını otomatik olarak bu motor üzerinden günceller.
+### 1. Modüler Monolith & FSD (Architecture)
+Platform, **Feature-Sliced Design (FSD)** prensiplerini takip eden modüler bir yapıya sahiptir. Tüm iş mantığı `features/` klasörü altında dikey dilimlenmiş (vertical slicing) modüllerden oluşur. Bu yapı; dairesel bağımlılıkları sıfırlarken, yüzlerce hesaplama aracının birbirine zarar vermeden geliştirilmesine olanak tanır.
+*   **Layered Architecture:** Features, Core, Shared ve App katmanları arasında kesin bir hiyerarşi mevcuttur.
+*   **Discovery Pattern:** Yeni bir hesaplama aracı eklemek, sadece konfigürasyon bazlıdır ve build motoru tarafından otomatik tanıtan (`generate-calculators.ts`) bir sistemle çalışır.
 
 ### 2. Hibrit Vektörel Arama (AI-Powered Search)
 Kullanıcılara sadece "keyword" değil, "niyet" bazlı arama sunmak için **OpenAI Embeddings** ve **Supabase pgvector** entegrasyonu sağladım. 
