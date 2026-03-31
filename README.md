@@ -6,6 +6,7 @@ Public architecture showcase for `hemenhesap.com`, a cloud-native calculation pl
 
 - Used by 500+ users through organic traffic
 - Reduced infrastructure costs by around 70 percent after moving deployment from Vercel to an AWS-centered setup
+- Expanded into a platform with 80+ calculator pages and 20+ supporting content pieces
 - Designed for fast page delivery, modular feature growth, and low operational overhead
 - Built with a production mindset around CI/CD, infrastructure automation, and security controls
 
@@ -24,6 +25,18 @@ It does not include:
 
 - the private production source code
 - secrets, credentials, or internal business logic
+
+## What The Product Covers
+
+In production, HemenHesap is more than a single calculator site.
+
+It includes:
+
+- a growing library of calculator pages across finance, tax, daily life, and work-related use cases
+- supporting blog and explainer content for SEO and search intent coverage
+- search and discovery flows that help users reach the right tool faster
+- internal admin capabilities used to manage and expand content more efficiently
+- analytics and operational tooling used to monitor platform behavior
 
 ## System Overview
 
@@ -52,6 +65,20 @@ The platform supports intent-aware discovery for calculation tools through embed
 
 Thousands of dynamic, SEO-focused pages can be served through build-time generation and ISR-style delivery patterns. Structured data and FAQ schemas are generated automatically for relevant tools.
 
+### Build and content workflow
+
+The platform is designed so that adding new tools does not require manual updates across many files.
+
+In practice, the build workflow helps keep:
+
+- calculator listings
+- search data
+- navigation structures
+- supporting content files
+- metadata used for discoverability
+
+in sync as the platform grows.
+
 ## Cloud and Delivery
 
 The application layer uses modern web tooling and managed services, while deployment and infrastructure control were optimized around AWS.
@@ -72,6 +99,7 @@ This setup keeps the app operationally lightweight while still giving strong con
 - Redis-based rate limiting for abuse protection
 - environment-driven configuration for safer secret handling
 - architecture designed to reduce coupling and operational risk
+- test and lint workflows used to catch issues before deployment
 
 ## Performance
 
